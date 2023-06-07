@@ -53,6 +53,7 @@ async function run() {
       const email = req.decoded.email;
       const query = { email: email };
       const user = await userCollection.findOne(query);
+      console.log(user);
       if (user?.role !== "admin") {
         return res.status(403).send({ error: true, message: "forbidden" });
       }
@@ -98,7 +99,7 @@ async function run() {
 
     // user api
 
-    app.get("/users", async (req, res) => {
+    app.get("/users", verifyjwt, verifyAdmin, async (req, res) => {
       const cursor = userCollection.find();
       const result = await cursor.toArray();
       res.send(result);
