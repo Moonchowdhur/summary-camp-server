@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 require("dotenv").config();
 var cors = require("cors");
+var jwt = require("jsonwebtoken");
 const port = process.env.PORT || 5000;
 
 app.use(cors());
@@ -19,6 +20,27 @@ const client = new MongoClient(uri, {
   },
 });
 
+const verifyjwt = (req, res, next) => {
+  // console.log(req.headers.authorization);
+  const authorization = req.headers.authorization;
+  if (!authorization) {
+    return res
+      .status(401)
+      .send({ error: true, message: "unauthorized access" });
+  }
+  const token = authorization.split(" ")[1];
+  // console.log(token);
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, decoded) => {
+    if (error) {
+      return res
+        .status(401)
+        .send({ error: true, message: "unauthorized access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+};
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -26,6 +48,16 @@ async function run() {
 
     const database = client.db("instrumentDB");
     const userCollection = database.collection("user");
+
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      if (user?.role !== "admin") {
+        return res.status(403).send({ error: true, message: "forbidden" });
+      }
+      next();
+    };
 
     //make user roll
     app.patch("/users/admin/:id", async (req, res) => {
