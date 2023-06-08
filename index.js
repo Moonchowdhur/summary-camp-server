@@ -198,6 +198,21 @@ async function run() {
       res.send(result);
     });
 
+    app.patch("/classes/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatedBody = req.body;
+      console.log(updatedBody);
+      const updateDoc = {
+        $set: {
+          seats: updatedBody.seats,
+          price: updatedBody.price,
+        },
+      };
+      const filter = { _id: new ObjectId(id) };
+      const result = await classCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
     // user api:todo:verifyAdmin
     app.get("/users", async (req, res) => {
       const cursor = userCollection.find();
