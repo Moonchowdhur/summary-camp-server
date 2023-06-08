@@ -88,6 +88,18 @@ async function run() {
     //   res.send(result);
     // });
 
+    // verify user**********
+    app.get("/users/admin", async (req, res) => {
+      let query = {};
+      const email = req.query.email;
+      if (req.query?.email) {
+        query = { email: email };
+      }
+      // const cursor = userCollection.findOne(query);
+      const result = await userCollection.findOne(query);
+      res.send(result);
+    });
+
     app.patch("/users/admin/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
@@ -122,6 +134,27 @@ async function run() {
       res.send(result);
     });
 
+    app.delete("/selectedclass/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await selectedClassCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // selected class get api--
+    app.get("/selectedclass", async (req, res) => {
+      let query = {};
+      const email = req.query.studentEmail;
+      console.log(email);
+      if (req.query?.studentEmail) {
+        query = { studentEmail: email };
+      }
+
+      const cursor = selectedClassCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
     // class api
     app.post("/classes", async (req, res) => {
       const classData = req.body;
@@ -131,7 +164,13 @@ async function run() {
     });
 
     app.get("/classes", async (req, res) => {
-      const cursor = classCollection.find();
+      let query = {};
+      const email = req.query.instructorEmail;
+      console.log(email);
+      if (req.query?.instructorEmail) {
+        query = { instructorEmail: email };
+      }
+      const cursor = classCollection.find(query);
       const result = await cursor.toArray();
 
       res.send(result);
