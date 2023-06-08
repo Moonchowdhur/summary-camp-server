@@ -127,18 +127,60 @@ async function run() {
     });
 
     // // for approved
-    // app.patch("/users/approved/:id", async (req, res) => {
-    //   const id = req.params.id;
-    //   const filter = { _id: new ObjectId(id) };
-    //   const updateDoc = {
-    //     $set: {
-    //       status: "approved",
-    //     },
-    //   };
-    //   const result = await userCollection.updateOne(filter, updateDoc);
+    app.patch("/class-approved/:id", async (req, res) => {
+      const id = req.params.id;
 
-    //   res.send(result);
-    // });
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: "approved",
+        },
+      };
+      console.log(filter, updateDoc);
+      const result = await classCollection.updateOne(filter, updateDoc);
+      console.log(result);
+      res.send(result);
+    });
+
+    // for denied
+
+    app.patch("/class-denied/:id", async (req, res) => {
+      const id = req.params.id;
+
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: "denied",
+        },
+      };
+      console.log(filter, updateDoc);
+      const result = await classCollection.updateOne(filter, updateDoc);
+      console.log(result);
+      res.send(result);
+    });
+
+    // feedback
+
+    app.patch("/classes/add-feedback/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatedData = req.body;
+      console.log(updatedData);
+      // const options = { upsert: true };
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          feedback: updatedData.feedback,
+        },
+      };
+      console.log(filter, updateDoc);
+      const result = await classCollection.updateOne(
+        filter,
+
+        updateDoc
+      );
+      console.log(result);
+      res.send(result);
+    });
 
     // selected class--
     app.post("/selectedclass", async (req, res) => {
