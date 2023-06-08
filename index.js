@@ -49,6 +49,7 @@ async function run() {
     const database = client.db("instrumentDB");
     const userCollection = database.collection("user");
     const classCollection = database.collection("class");
+    const selectedClassCollection = database.collection("selectedclass");
 
     const verifyAdmin = async (req, res, next) => {
       const useremail = req.decoded.email;
@@ -113,11 +114,26 @@ async function run() {
       res.send(result);
     });
 
+    // selected class--
+    app.post("/selectedclass", async (req, res) => {
+      const selectedClassData = req.body;
+      console.log(selectedClassData);
+      const result = await selectedClassCollection.insertOne(selectedClassData);
+      res.send(result);
+    });
+
     // class api
     app.post("/classes", async (req, res) => {
       const classData = req.body;
       console.log(classData);
       const result = await classCollection.insertOne(classData);
+      res.send(result);
+    });
+
+    app.get("/classes", async (req, res) => {
+      const cursor = classCollection.find();
+      const result = await cursor.toArray();
+
       res.send(result);
     });
 
