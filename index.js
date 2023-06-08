@@ -48,10 +48,12 @@ async function run() {
 
     const database = client.db("instrumentDB");
     const userCollection = database.collection("user");
+    const classCollection = database.collection("class");
 
     const verifyAdmin = async (req, res, next) => {
-      const email = req.decoded.email;
-      const query = { email: email };
+      const useremail = req.decoded.email;
+
+      const query = { email: req.decoded.email };
       const user = await userCollection.findOne(query);
       console.log(user);
       if (user?.role !== "admin") {
@@ -71,6 +73,20 @@ async function run() {
     });
 
     //make user roll
+
+    // app.get("/users/admin/:email", verifyjwt, async (req, res) => {
+    //   const email = req.params.email;
+    //   if (req.decoded.email !== email) {
+    //     return res.send({ admin: false });
+    //   }
+    //   const query = { email: email };
+    //   // console.log(4, email, req.decoded.email);
+    //   const user = await userCollection.findOne(query);
+    //   // console.log(user);
+    //   const result = { admin: user?.role === "admin" };
+    //   res.send(result);
+    // });
+
     app.patch("/users/admin/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
@@ -97,9 +113,16 @@ async function run() {
       res.send(result);
     });
 
-    // user api
+    // class api
+    app.post("/classes", async (req, res) => {
+      const classData = req.body;
+      console.log(classData);
+      const result = await classCollection.insertOne(classData);
+      res.send(result);
+    });
 
-    app.get("/users", verifyjwt, verifyAdmin, async (req, res) => {
+    // user api:todo:verifyAdmin
+    app.get("/users", async (req, res) => {
       const cursor = userCollection.find();
       const result = await cursor.toArray();
       res.send(result);
