@@ -4,6 +4,7 @@ require("dotenv").config();
 var cors = require("cors");
 var jwt = require("jsonwebtoken");
 const port = process.env.PORT || 5000;
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 
 app.use(cors());
 app.use(express.json());
@@ -50,6 +51,8 @@ async function run() {
     const userCollection = database.collection("user");
     const classCollection = database.collection("class");
     const selectedClassCollection = database.collection("selectedclass");
+    const paymentHistoryCollection = database.collection("paymentshistory");
+    const enrolledClassCollection = database.collection("enrolledclasses");
 
     const verifyAdmin = async (req, res, next) => {
       const useremail = req.decoded.email;
@@ -211,6 +214,51 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/selectedclass/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await selectedClassCollection.findOne(query);
+      res.send(result);
+    });
+
+    // // popular class
+    // app.get("/popularclass", async (req, res) => {
+    //   const cursor = classCollection
+    //     .find()
+    //     .sort({
+    //       seats: -1,
+    //     })
+    //     .limit(6);
+    //   const result = await cursor.toArray();
+    //   res.send(result);
+    // });
+
+    app.get("/paymenthistory", async (req, res) => {
+      let query = {};
+      const sEmail = req.query?.studentEmail;
+      console.log(sEmail);
+      if (req.query?.studentEmail) {
+        query = { studentEmail: req.query?.studentEmail };
+      }
+      const cursor = paymentHistoryCollection.find(query).sort({
+        date: -1,
+      });
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.get("/enrolledhistory", async (req, res) => {
+      let query = {};
+      const sEmail = req.query?.studentEmail;
+      console.log(sEmail);
+      if (req.query?.studentEmail) {
+        query = { studentEmail: req.query?.studentEmail };
+      }
+      const cursor = enrolledClassCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
     // class api
     app.post("/classes", async (req, res) => {
       const classData = req.body;
@@ -273,6 +321,61 @@ async function run() {
       const result = await userCollection.insertOne(user);
       // console.log({ result });
       res.send(result);
+    });
+
+    // paymemt
+    app.post("/create-payment-intent", verifyjwt, async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price) * 100;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "INR",
+        payment_method_types: ["card"],
+      });
+      console.log(paymentIntent);
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+    // Payments
+    app.post("/payments", async (req, res) => {
+      const { paymentHistory, enrolledClass } = req.body;
+      const insertPaymentHistory = await paymentHistoryCollection.insertOne(
+        paymentHistory
+      );
+
+      const insertEnrolledClass = await enrolledClassCollection.insertOne(
+        enrolledClass
+      );
+
+      const selectedClassQuery = {
+        selectedClassId: enrolledClass.selectedClassId,
+      };
+      const deleteSelectedClass = await selectedClassCollection.deleteOne(
+        selectedClassQuery
+      );
+
+      const filter = { _id: new ObjectId(enrolledClass.selectedClassId) };
+      const singleClass = await classCollection.findOne(filter);
+
+      const updateDoc = {
+        $set: {
+          seats: singleClass.seats - 1,
+        },
+      };
+      const updateAvailableSeats = await classCollection.updateOne(
+        filter,
+        updateDoc
+      );
+
+      res.send({
+        insertPaymentHistory,
+        insertEnrolledClass,
+        deleteSelectedClass,
+        updateAvailableSeats,
+      });
     });
 
     // Send a ping to confirm a successful connection
