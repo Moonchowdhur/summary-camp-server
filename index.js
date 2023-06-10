@@ -221,17 +221,17 @@ async function run() {
       res.send(result);
     });
 
-    // // popular class
-    // app.get("/popularclass", async (req, res) => {
-    //   const cursor = classCollection
-    //     .find()
-    //     .sort({
-    //       seats: -1,
-    //     })
-    //     .limit(6);
-    //   const result = await cursor.toArray();
-    //   res.send(result);
-    // });
+    // popular class
+    app.get("/popularclass", async (req, res) => {
+      const cursor = classCollection
+        .find()
+        .sort({
+          enrollstudent: -1,
+        })
+        .limit(6);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
 
     app.get("/paymenthistory", async (req, res) => {
       let query = {};
@@ -363,6 +363,7 @@ async function run() {
       const updateDoc = {
         $set: {
           seats: singleClass.seats - 1,
+          enrollstudent: singleClass.enrollstudent + 1,
         },
       };
       const updateAvailableSeats = await classCollection.updateOne(
