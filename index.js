@@ -324,7 +324,7 @@ async function run() {
       });
     });
 
-    // Payments related api
+    // Payments related api--
     app.post("/payments", async (req, res) => {
       const { paymentHistory, enrolledClass } = req.body;
       const insertPaymentHistory = await paymentHistoryCollection.insertOne(
