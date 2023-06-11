@@ -45,7 +45,7 @@ const verifyjwt = (req, res, next) => {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const database = client.db("instrumentDB");
     const userCollection = database.collection("user");
@@ -75,21 +75,6 @@ async function run() {
       });
       res.send({ token });
     });
-
-    //make user roll
-
-    // app.get("/users/admin/:email", verifyjwt, async (req, res) => {
-    //   const email = req.params.email;
-    //   if (req.decoded.email !== email) {
-    //     return res.send({ admin: false });
-    //   }
-    //   const query = { email: email };
-    //   // console.log(4, email, req.decoded.email);
-    //   const user = await userCollection.findOne(query);
-    //   // console.log(user);
-    //   const result = { admin: user?.role === "admin" };
-    //   res.send(result);
-    // });
 
     // verify user**********
     app.get("/users/admin", async (req, res) => {
